@@ -10,7 +10,7 @@ Local-network messaging, media sharing, and calls.
 - **Calls**: WebRTC (mesh, server handles signaling only)
 
 ## Version
-`v0.1.0` — Initial scaffold
+`v1.0.0` — Initial scaffold
 
 ## Quick Start
 ```bash
