@@ -1,5 +1,3 @@
-import ReactDOM from 'react-dom/client';
-
 import { QueryProvider } from './providers/QueryProvider';
 import { ThemeProvider } from './providers/ThemeProvider';
 import { SocketProvider } from './providers/SocketProvider';
@@ -25,5 +23,3 @@ function App() {
 		</QueryProvider>
 	);
 }
-
-ReactDOM.createRoot(document.getElementById('root')!).render(<App />);

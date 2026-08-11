@@ -4,7 +4,6 @@
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
 		"outDir": "dist",
-		"rootDir": "src",
 		"strict": true,
 		"skipLibCheck": true,
 		"esModuleInterop": true,
@@ -16,6 +15,6 @@
 			"@wudapp/types": ["../../packages/types/src/index.ts"]
 		}
 	},
-	"include": ["src/**/*"],
+	"include": ["src/**/*", "../../packages/types/src/**/*"],
 	"exclude": ["node_modules", "dist"]
 }
