@@ -6,7 +6,6 @@ import { useAuthStore } from '../modules/auth/store/auth.store';
 
 function AppWithProviders() {
 	const token = useAuthStore(s => s.token);
-
 	return (
 		<SocketProvider token={token}>
 			<AppRouter />
@@ -14,7 +13,7 @@ function AppWithProviders() {
 	);
 }
 
-function App() {
+export function App() {
 	return (
 		<QueryProvider>
 			<ThemeProvider>
