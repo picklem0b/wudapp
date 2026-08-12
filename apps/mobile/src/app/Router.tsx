@@ -3,6 +3,7 @@ import { ConversationListScreen } from '../modules/messaging/screens/Conversatio
 import { ChatScreen } from '../modules/messaging/screens/ChatScreen';
 import { CallScreen } from '../modules/calls/screens/CallScreen';
 import { CallHistoryScreen } from '../modules/calls/screens/CallHistoryScreen';
+import { DialPadScreen } from '../modules/calls/screens/DialPadScreen';
 import { MediaViewerScreen } from '../modules/media/screens/MediaViewerScreen';
 
 export function AppRouter() {
@@ -13,6 +14,7 @@ export function AppRouter() {
 				<Route path='/chat/:conversationId' element={<ChatScreen />} />
 				<Route path='/call/:callId' element={<CallScreen />} />
 				<Route path='/call-history' element={<CallHistoryScreen />} />
+				<Route path='/dial' element={<DialPadScreen />} />
 				<Route
 					path='/media/:attachmentId'
 					element={<MediaViewerScreen />}
