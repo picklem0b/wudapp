@@ -5,12 +5,29 @@ import { App } from './app/App';
 // ── Global styles ─────────────────────────────────────────────────────────────
 const style = document.createElement('style');
 style.textContent = `
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0; padding: 0; 
+      }
   html, body, #root { height: 100%; }
-  body { background: #000; color: #fff; -webkit-font-smoothing: antialiased; }
+  body {
+      background: #000;
+      color: #fff;
+      -webkit-font-smoothing: antialiased;
+       }
   button { font-family: inherit; }
   textarea, input { font-family: inherit; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes spin  { to { transform: rotate(360deg); } }
+  @keyframes pulse {
+      0% {
+          transform: scale(1);
+          opacity: 0.6;
+         } 
+    100% {
+    transform: scale(1.6);
+    opacity: 0;
+        } 
+    }
   ::-webkit-scrollbar { width: 0; }
 `;
 document.head.appendChild(style);

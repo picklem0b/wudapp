@@ -1,4 +1,3 @@
-//import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../infrastructure/api.client';
@@ -37,24 +36,47 @@ export function ConversationListScreen() {
 			{/* ── Header ── */}
 			<div style={styles.header}>
 				<span style={styles.headerTitle}>Wudapp</span>
-				<button
-					style={styles.iconBtn}
-					onClick={() => navigate('/call-history')}
-					aria-label='Call history'
-				>
-					<svg
-						width='22'
-						height='22'
-						viewBox='0 0 24 24'
-						fill='none'
-						stroke='currentColor'
-						strokeWidth='2'
-						strokeLinecap='round'
-						strokeLinejoin='round'
+				<div style={{ display: 'flex', gap: 4 }}>
+					<button
+						style={styles.iconBtn}
+						onClick={() => navigate('/dial')}
+						aria-label='New call'
 					>
-						<path d='M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.14 1.18 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.11 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z' />
-					</svg>
-				</button>
+						<svg
+							width='22'
+							height='22'
+							viewBox='0 0 24 24'
+							fill='none'
+							stroke='currentColor'
+							strokeWidth='2'
+							strokeLinecap='round'
+							strokeLinejoin='round'
+						>
+							<path d='M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.14 1.18 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.11 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z' />
+							<line x1='19' y1='0' x2='19' y2='6' />
+							<line x1='16' y1='3' x2='22' y2='3' />
+						</svg>
+					</button>
+					<button
+						style={styles.iconBtn}
+						onClick={() => navigate('/call-history')}
+						aria-label='Call history'
+					>
+						<svg
+							width='22'
+							height='22'
+							viewBox='0 0 24 24'
+							fill='none'
+							stroke='currentColor'
+							strokeWidth='2'
+							strokeLinecap='round'
+							strokeLinejoin='round'
+						>
+							<polyline points='12 8 12 12 14 14' />
+							<circle cx='12' cy='12' r='10' />
+						</svg>
+					</button>
+				</div>
 			</div>
 
 			{/* ── Body ── */}
