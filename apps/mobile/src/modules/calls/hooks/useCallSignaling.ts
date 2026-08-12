@@ -7,7 +7,7 @@ import type { Call } from '@wudapp/types';
 export function useCallSignaling() {
 	const { socket } = useSocketContext();
 	const navigate = useNavigate();
-	const { setIncoming, setActive, activeCall } = useCallsStore();
+	const { setIncoming, setActive } = useCallsStore();
 
 	useEffect(() => {
 		if (!socket) return;

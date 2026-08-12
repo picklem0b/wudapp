@@ -12,7 +12,7 @@ export function CallScreen() {
 	const activeCall = useCallsStore(s => s.activeCall);
 	const { controls, toggleAudio, toggleVideo, toggleSpeaker } =
 		useCallState();
-	const { startCall, endCall } = useWebRTC();
+	const { endCall } = useWebRTC();
 
 	const localVideoRef = useRef<HTMLVideoElement>(null);
 	const remoteVideoRef = useRef<HTMLVideoElement>(null);

@@ -9,7 +9,7 @@ import { useTyping } from '../hooks/useTyping';
 import { useCallSignaling } from '../../calls/hooks/useCallSignaling';
 import { useSocketContext } from '../../../app/providers/SocketProvider';
 import type { Message, Conversation } from '@wudapp/types';
-import { formatMessageTime, formatDuration } from '../../../shared/utils/date';
+import { formatMessageTime } from '../../../shared/utils/date';
 
 export function ChatScreen() {
 	const { conversationId } = useParams<{ conversationId: string }>();
