@@ -83,12 +83,13 @@ export class MessagingService {
 		cursor?: string,
 		limit = 50
 	): Promise<Message[]> {
-		return db.query.messages.findMany({
+		const result = await db.query.messages.findMany({
 			where: eq(messages.conversationId, conversationId),
 			orderBy: [desc(messages.createdAt)],
 			limit,
 			with: { sender: true, attachment: true }
-		}) as any[];
+		});
+		return result as unknown as Message[];
 	}
 
 	async editMessage(
