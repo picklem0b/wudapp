@@ -1,5 +1,3 @@
-import ReactDOM from 'react-dom/client';
-
 import { QueryProvider } from './providers/QueryProvider';
 import { ThemeProvider } from './providers/ThemeProvider';
 import { SocketProvider } from './providers/SocketProvider';
@@ -8,7 +6,6 @@ import { useAuthStore } from '../modules/auth/store/auth.store';
 
 function AppWithProviders() {
 	const token = useAuthStore(s => s.token);
-
 	return (
 		<SocketProvider token={token}>
 			<AppRouter />
@@ -16,7 +13,7 @@ function AppWithProviders() {
 	);
 }
 
-function App() {
+export function App() {
 	return (
 		<QueryProvider>
 			<ThemeProvider>
@@ -25,5 +22,3 @@ function App() {
 		</QueryProvider>
 	);
 }
-
-ReactDOM.createRoot(document.getElementById('root')!).render(<App />);
