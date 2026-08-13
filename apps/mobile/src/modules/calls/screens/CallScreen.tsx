@@ -25,31 +25,23 @@ export function CallScreen() {
 	const call = activeCall ?? incomingCall ?? outgoingCall;
 	const isVideo = call?.type === 'video';
 
-	// ── Timer (only when active) ───────────────────────────────────────────────
 	useEffect(() => {
 		if (phase !== 'active') return;
 		const t = setInterval(() => setDuration(d => d + 1), 1000);
 		return () => clearInterval(t);
 	}, [phase]);
 
-	// ── Local stream ───────────────────────────────────────────────────────────
 	useEffect(() => {
 		if (phase !== 'active' && phase !== 'outgoing') return;
-		(async () => {
-			try {
-				const stream = await navigator.mediaDevices.getUserMedia({
-					audio: true,
-					video: isVideo
-				});
+		navigator.mediaDevices
+			.getUserMedia({ audio: true, video: isVideo })
+			.then(stream => {
 				if (localVideoRef.current)
 					localVideoRef.current.srcObject = stream;
-			} catch {
-				/* no mic/cam in dev */
-			}
-		})();
+			})
+			.catch(() => {});
 	}, [phase, isVideo]);
 
-	// ── Remote stream ──────────────────────────────────────────────────────────
 	useEffect(() => {
 		const handler = (e: Event) => {
 			const { peerId, stream } = (e as CustomEvent).detail;
@@ -82,115 +74,125 @@ export function CallScreen() {
 		navigate('/');
 	};
 
-	const formatDur = (s: number) =>
+	const fmt = (s: number) =>
 		`${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
-	const callerLabel =
+	const statusLabel =
 		phase === 'outgoing'
 			? 'Calling…'
 			: phase === 'incoming'
 				? 'Incoming call'
 				: remoteStreams.size > 0
-					? formatDur(duration)
+					? fmt(duration)
 					: 'Connecting…';
 
 	return (
-		<div style={styles.root}>
-			{/* ── Remote video / voice background ── */}
+		<div className='flex flex-col h-dvh bg-black text-white relative overflow-hidden'>
+			{/* ── Remote video or voice backdrop ── */}
 			{isVideo && phase === 'active' ? (
 				<video
 					ref={remoteVideoRef}
 					autoPlay
 					playsInline
-					style={styles.remoteVideo}
+					className='flex-1 object-cover bg-ios-bg2'
 				/>
 			) : (
-				<div style={styles.backdrop}>
-					{/* Pulsing ring on outgoing/incoming */}
+				<div className='flex-1 flex flex-col items-center justify-center gap-4 relative'>
 					{(phase === 'outgoing' || phase === 'incoming') && (
-						<div style={styles.pulseRing} />
+						<>
+							<div className='absolute w-36 h-36 rounded-full border border-ios-blue/20 animate-pulse-ring' />
+							<div
+								className='absolute w-44 h-44 rounded-full border border-ios-blue/10 animate-pulse-ring'
+								style={{ animationDelay: '0.4s' }}
+							/>
+						</>
 					)}
-					<div style={styles.voiceAvatar}>
+					<div className='w-24 h-24 rounded-full bg-ios-bg2 flex items-center justify-center text-4xl font-bold z-10'>
 						{call?.initiatedBy?.charAt(0).toUpperCase() ?? '?'}
 					</div>
-					<div style={styles.callerName}>
+					<div className='text-xl font-semibold z-10'>
 						{call?.initiatedBy ?? 'Unknown'}
 					</div>
-					<div style={styles.callerStatus}>{callerLabel}</div>
+					<div className='text-[14px] text-ios-gray z-10'>
+						{statusLabel}
+					</div>
 				</div>
 			)}
 
-			{/* ── Local video PiP ── */}
+			{/* ── Local PiP ── */}
 			{isVideo && (
 				<video
 					ref={localVideoRef}
 					autoPlay
 					playsInline
 					muted
-					style={styles.localVideo}
+					className='absolute top-14 right-4 w-24 h-36 rounded-ios-lg object-cover bg-ios-bg3 border border-ios-separator z-10'
 				/>
 			)}
 
-			{/* ── Incoming — accept / decline ── */}
+			{/* ── Incoming ── */}
 			{phase === 'incoming' && (
-				<div style={styles.incomingControls}>
-					<div style={styles.incomingRow}>
-						<div style={styles.incomingAction}>
-							<button
-								style={styles.declineBtn}
-								onClick={handleDecline}
-							>
-								<PhoneDown />
-							</button>
-							<span style={styles.actionLabel}>Decline</span>
-						</div>
-						<div style={styles.incomingAction}>
-							<button
-								style={styles.acceptBtn}
-								onClick={handleAccept}
-							>
-								<PhoneIcon />
-							</button>
-							<span style={styles.actionLabel}>Accept</span>
-						</div>
-					</div>
-				</div>
-			)}
-
-			{/* ── Outgoing — cancel ── */}
-			{phase === 'outgoing' && (
-				<div style={styles.outgoingControls}>
-					<button style={styles.cancelBtn} onClick={handleEnd}>
+				<div className='flex justify-around items-center px-10 pb-16 pt-6 flex-shrink-0'>
+					<CallActionBtn
+						color='bg-ios-red'
+						label='Decline'
+						onClick={handleDecline}
+					>
 						<PhoneDown />
-					</button>
-					<span style={styles.actionLabel}>Cancel</span>
+					</CallActionBtn>
+					<CallActionBtn
+						color='bg-ios-green'
+						label='Accept'
+						onClick={handleAccept}
+					>
+						<PhoneUp />
+					</CallActionBtn>
 				</div>
 			)}
 
-			{/* ── Active — full controls ── */}
+			{/* ── Outgoing ── */}
+			{phase === 'outgoing' && (
+				<div className='flex flex-col items-center gap-3 pb-16 pt-6 flex-shrink-0'>
+					<CallActionBtn
+						color='bg-ios-red'
+						label='Cancel'
+						onClick={handleEnd}
+					>
+						<PhoneDown />
+					</CallActionBtn>
+				</div>
+			)}
+
+			{/* ── Active controls ── */}
 			{phase === 'active' && (
-				<div style={styles.controls}>
+				<div className='flex items-center justify-center gap-5 px-6 pb-16 pt-6 flex-shrink-0'>
 					{isVideo && (
-						<ControlBtn
-							label={controls.videoMuted ? 'Cam off' : 'Cam on'}
+						<CtrlBtn
 							active={!controls.videoMuted}
+							label={controls.videoMuted ? 'Cam off' : 'Cam on'}
 							onClick={toggleVideo}
-							icon={<VideoIcon muted={controls.videoMuted} />}
-						/>
+						>
+							<CamIcon muted={controls.videoMuted} />
+						</CtrlBtn>
 					)}
-					<ControlBtn
-						label={controls.audioMuted ? 'Unmute' : 'Mute'}
+					<CtrlBtn
 						active={!controls.audioMuted}
+						label={controls.audioMuted ? 'Unmute' : 'Mute'}
 						onClick={toggleAudio}
-						icon={<MicIcon muted={controls.audioMuted} />}
-					/>
-					<ControlBtn
-						label={controls.speakerOn ? 'Speaker' : 'Earpiece'}
+					>
+						<MicIcon muted={controls.audioMuted} />
+					</CtrlBtn>
+					<CtrlBtn
 						active={controls.speakerOn}
+						label={controls.speakerOn ? 'Speaker' : 'Earpiece'}
 						onClick={toggleSpeaker}
-						icon={<SpeakerIcon on={controls.speakerOn} />}
-					/>
-					<button style={styles.endBtn} onClick={handleEnd}>
+					>
+						<SpeakerIcon on={controls.speakerOn} />
+					</CtrlBtn>
+					<button
+						className='press-scale w-16 h-16 rounded-full bg-ios-red flex items-center justify-center'
+						onClick={handleEnd}
+					>
 						<PhoneDown />
 					</button>
 				</div>
@@ -199,52 +201,74 @@ export function CallScreen() {
 	);
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
-function ControlBtn({
-	icon,
+function CallActionBtn({
+	color,
 	label,
-	active,
-	onClick
+	onClick,
+	children
 }: {
-	icon: React.ReactNode;
+	color: string;
 	label: string;
-	active: boolean;
 	onClick: () => void;
+	children: React.ReactNode;
 }) {
 	return (
-		<button
-			style={{
-				...styles.ctrlBtn,
-				background: active ? '#2a2a2a' : '#1c1c1e'
-			}}
-			onClick={onClick}
-		>
-			{icon}
-			<span style={styles.ctrlLabel}>{label}</span>
-		</button>
+		<div className='flex flex-col items-center gap-2'>
+			<button
+				className={`press-scale w-[70px] h-[70px] rounded-full ${color} flex items-center justify-center`}
+				onClick={onClick}
+			>
+				{children}
+			</button>
+			<span className='text-[13px] text-ios-label2'>{label}</span>
+		</div>
 	);
 }
 
-function PhoneIcon() {
+function CtrlBtn({
+	active,
+	label,
+	onClick,
+	children
+}: {
+	active: boolean;
+	label: string;
+	onClick: () => void;
+	children: React.ReactNode;
+}) {
 	return (
-		<svg width='26' height='26' viewBox='0 0 24 24' fill='currentColor'>
-			<path d='M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z' />
-		</svg>
+		<div className='flex flex-col items-center gap-1.5'>
+			<button
+				className={`press-scale w-14 h-14 rounded-full flex items-center justify-center ${active ? 'bg-ios-bg3' : 'bg-ios-bg2'}`}
+				onClick={onClick}
+			>
+				{children}
+			</button>
+			<span className='text-[11px] text-ios-gray'>{label}</span>
+		</div>
 	);
 }
+
 function PhoneDown() {
 	return (
-		<svg width='26' height='26' viewBox='0 0 24 24' fill='currentColor'>
+		<svg width='26' height='26' viewBox='0 0 24 24' fill='white'>
 			<path d='M10.68 13.31a16 16 0 003.41 2.6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7 2 2 0 012 2v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.42 19.42 0 013.07 9.81a2 2 0 012-2.18H8a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11l-1.27 1.27z' />
 			<line
 				x1='23'
 				y1='1'
 				x2='1'
 				y2='23'
-				stroke='currentColor'
+				stroke='white'
 				strokeWidth='2'
 				strokeLinecap='round'
 			/>
+		</svg>
+	);
+}
+function PhoneUp() {
+	return (
+		<svg width='26' height='26' viewBox='0 0 24 24' fill='white'>
+			<path d='M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z' />
 		</svg>
 	);
 }
@@ -255,7 +279,7 @@ function MicIcon({ muted }: { muted: boolean }) {
 			height='22'
 			viewBox='0 0 24 24'
 			fill='none'
-			stroke='currentColor'
+			stroke='white'
 			strokeWidth='2'
 			strokeLinecap='round'
 			strokeLinejoin='round'
@@ -276,14 +300,14 @@ function MicIcon({ muted }: { muted: boolean }) {
 		</svg>
 	);
 }
-function VideoIcon({ muted }: { muted: boolean }) {
+function CamIcon({ muted }: { muted: boolean }) {
 	return (
 		<svg
 			width='22'
 			height='22'
 			viewBox='0 0 24 24'
 			fill='none'
-			stroke='currentColor'
+			stroke='white'
 			strokeWidth='2'
 			strokeLinecap='round'
 			strokeLinejoin='round'
@@ -311,7 +335,7 @@ function SpeakerIcon({ on }: { on: boolean }) {
 			height='22'
 			viewBox='0 0 24 24'
 			fill='none'
-			stroke='currentColor'
+			stroke='white'
 			strokeWidth='2'
 			strokeLinecap='round'
 			strokeLinejoin='round'
@@ -323,153 +347,3 @@ function SpeakerIcon({ on }: { on: boolean }) {
 		</svg>
 	);
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-const styles: Record<string, React.CSSProperties> = {
-	root: {
-		display: 'flex',
-		flexDirection: 'column',
-		height: '100dvh',
-		background: '#0a0a0a',
-		color: '#fff',
-		fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-		position: 'relative'
-	},
-	remoteVideo: { flex: 1, objectFit: 'cover', background: '#111' },
-	backdrop: {
-		flex: 1,
-		display: 'flex',
-		flexDirection: 'column',
-		alignItems: 'center',
-		justifyContent: 'center',
-		gap: 14,
-		position: 'relative'
-	},
-	pulseRing: {
-		position: 'absolute',
-		width: 140,
-		height: 140,
-		borderRadius: '50%',
-		border: '2px solid rgba(0,149,246,0.3)',
-		animation: 'pulse 1.8s ease-out infinite'
-	},
-	voiceAvatar: {
-		width: 100,
-		height: 100,
-		borderRadius: '50%',
-		background: '#1c1c1e',
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'center',
-		fontSize: 42,
-		fontWeight: 700,
-		zIndex: 1
-	},
-	callerName: { fontSize: 24, fontWeight: 700, zIndex: 1 },
-	callerStatus: { fontSize: 15, color: '#888', zIndex: 1 },
-	localVideo: {
-		position: 'absolute',
-		top: 20,
-		right: 16,
-		width: 100,
-		height: 140,
-		borderRadius: 16,
-		objectFit: 'cover',
-		background: '#222',
-		border: '2px solid #333',
-		zIndex: 10
-	},
-	incomingControls: {
-		padding: '28px 20px 44px',
-		flexShrink: 0
-	},
-	incomingRow: {
-		display: 'flex',
-		justifyContent: 'space-around',
-		alignItems: 'center'
-	},
-	incomingAction: {
-		display: 'flex',
-		flexDirection: 'column',
-		alignItems: 'center',
-		gap: 10
-	},
-	declineBtn: {
-		background: '#ff3b30',
-		border: 'none',
-		borderRadius: '50%',
-		width: 70,
-		height: 70,
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'center',
-		color: '#fff',
-		cursor: 'pointer'
-	},
-	acceptBtn: {
-		background: '#34c759',
-		border: 'none',
-		borderRadius: '50%',
-		width: 70,
-		height: 70,
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'center',
-		color: '#fff',
-		cursor: 'pointer'
-	},
-	outgoingControls: {
-		display: 'flex',
-		flexDirection: 'column',
-		alignItems: 'center',
-		gap: 10,
-		padding: '28px 20px 44px',
-		flexShrink: 0
-	},
-	cancelBtn: {
-		background: '#ff3b30',
-		border: 'none',
-		borderRadius: '50%',
-		width: 70,
-		height: 70,
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'center',
-		color: '#fff',
-		cursor: 'pointer'
-	},
-	actionLabel: { fontSize: 13, color: '#aaa' },
-	controls: {
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'center',
-		gap: 14,
-		padding: '24px 20px 40px',
-		flexShrink: 0
-	},
-	ctrlBtn: {
-		display: 'flex',
-		flexDirection: 'column',
-		alignItems: 'center',
-		gap: 6,
-		border: 'none',
-		borderRadius: 18,
-		padding: '14px 16px',
-		color: '#fff',
-		cursor: 'pointer',
-		minWidth: 60
-	},
-	ctrlLabel: { fontSize: 11, color: '#aaa' },
-	endBtn: {
-		background: '#ff3b30',
-		border: 'none',
-		borderRadius: '50%',
-		width: 64,
-		height: 64,
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'center',
-		color: '#fff',
-		cursor: 'pointer'
-	}
-};
