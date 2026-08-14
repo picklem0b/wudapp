@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "tsx watch src/main.ts",
 		"build": "tsc",
-		"start": "node dist/main.js",
+		"start": "node dist/apps/server/src/main.js",
 		"typecheck": "tsc --noEmit",
 		"migrate": "drizzle-kit migrate",
 		"migrate:generate": "drizzle-kit generate"
