@@ -27,6 +27,6 @@ services:
       - key: MAX_VOICE_BYTES
         value: 26214400
     disk:
-    name: wudapp-data
-    mountPath: /var/data
-    sizeGB: 1
+        name: wudapp-data
+        mountPath: /var/data
+        sizeGB: 1
