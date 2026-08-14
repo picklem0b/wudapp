@@ -1,0 +1,81 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/types/**'
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: 'Server URL (e.g. https://wudapp-server.onrender.com)'
+        required: false
+        default: ''
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout ────────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Java (needed for Gradle) ─────────────────────────────────────────
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # ── Node ─────────────────────────────────────────────────────────────
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ── pnpm ─────────────────────────────────────────────────────────────
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      # ── Install deps ──────────────────────────────────────────────────────
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ── Build mobile (Vite) ───────────────────────────────────────────────
+      - name: Build mobile
+        working-directory: apps/mobile
+        env:
+          VITE_API_URL: ${{ github.event.inputs.api_url || secrets.VITE_API_URL || 'https://wudapp-server.onrender.com' }}
+          VITE_SOCKET_URL: ${{ github.event.inputs.api_url || secrets.VITE_API_URL || 'https://wudapp-server.onrender.com' }}
+        run: pnpm build
+
+      # ── Capacitor sync ────────────────────────────────────────────────────
+      - name: Capacitor sync Android
+        working-directory: apps/mobile
+        run: npx cap sync android
+
+      # ── Android SDK ───────────────────────────────────────────────────────
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      # ── Accept SDK licenses ───────────────────────────────────────────────
+      - name: Accept Android licenses
+        run: yes | sdkmanager --licenses || true
+
+      # ── Build debug APK ───────────────────────────────────────────────────
+      - name: Build debug APK
+        working-directory: apps/mobile/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      # ── Upload APK artifact ───────────────────────────────────────────────
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: wudapp-debug-${{ github.sha }}
+          path: apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14

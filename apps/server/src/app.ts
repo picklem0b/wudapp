@@ -18,7 +18,10 @@ import type { TypedIO } from './infrastructure/socket.server.js';
 export async function buildApp() {
 	const fastify = Fastify({ logger: true });
 
-	await fastify.register(fastifyCors, { origin: '*' });
+	await fastify.register(fastifyCors, {
+		origin: true, // allow all — APK and web clients
+		credentials: true
+	});
 	await fastify.register(fastifyJwt, { secret: config.JWT_SECRET });
 	await fastify.register(fastifyMultipart, {
 		limits: { fileSize: config.MAX_VIDEO_BYTES }
@@ -54,7 +57,7 @@ export async function registerRoutes(fastify: any, io: TypedIO) {
 	// Health check — no auth required
 	fastify.get('/health', async () => ({
 		status: 'ok',
-		version: '1.0.0',
+		version: '1.7.5',
 		timestamp: new Date().toISOString()
 	}));
 
