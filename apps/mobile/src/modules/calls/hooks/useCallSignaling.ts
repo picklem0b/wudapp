@@ -7,34 +7,42 @@ import type { Call } from '@wudapp/types';
 export function useCallSignaling() {
 	const { socket } = useSocketContext();
 	const navigate = useNavigate();
-	const { setIncoming, setActive } = useCallsStore();
+	const { setIncoming, setActive, setOutgoing, setPhase, clearAll } =
+		useCallsStore();
 
 	useEffect(() => {
 		if (!socket) return;
 
+		// ── Incoming call ─────────────────────────────────────────────────────
 		socket.on('call:incoming', (call: Call) => {
 			setIncoming(call);
-			// Auto-navigate to call screen — auth will gate this properly later
+			setPhase('incoming');
 			navigate(`/call/${call.id}`);
 		});
 
+		// ── Callee accepted — both sides go active ────────────────────────────
 		socket.on('call:accepted', ({ callId }) => {
-			const incoming = useCallsStore.getState().incomingCall;
-			if (incoming && incoming.id === callId) {
-				setActive(incoming);
+			const store = useCallsStore.getState();
+			const call = store.outgoingCall ?? store.incomingCall;
+			if (call && call.id === callId) {
+				setActive({ ...call, status: 'active' });
+				setOutgoing(null);
 				setIncoming(null);
+				setPhase('active');
 				navigate(`/call/${callId}`);
 			}
 		});
 
-		socket.on('call:ended', ({ callId: _callId }) => {
-			setActive(null);
-			setIncoming(null);
+		// ── Caller cancelled or other side hung up ────────────────────────────
+		socket.on('call:ended', () => {
+			clearAll();
 			navigate('/');
 		});
 
+		// ── Callee declined ───────────────────────────────────────────────────
 		socket.on('call:declined', () => {
-			setIncoming(null);
+			clearAll();
+			navigate('/');
 		});
 
 		return () => {
@@ -43,5 +51,13 @@ export function useCallSignaling() {
 			socket.off('call:ended');
 			socket.off('call:declined');
 		};
-	}, [socket, navigate, setIncoming, setActive]);
+	}, [
+		socket,
+		navigate,
+		setIncoming,
+		setActive,
+		setOutgoing,
+		setPhase,
+		clearAll
+	]);
 }
