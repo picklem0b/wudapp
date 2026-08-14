@@ -5,8 +5,8 @@ services:
     region: oregon
     plan: free
     rootDir: apps/server
-    buildCommand: npm install && npm run build
-    startCommand: npm run start
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @wudapp/server build
+    startCommand: pnpm --filter @wudapp/server start
     envVars:
       - key: NODE_ENV
         value: production
