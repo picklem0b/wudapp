@@ -1,9 +1,9 @@
 services:
   - type: web
-    name: wudapp-server
+    name:    wudapp-server
     runtime: node
     region: oregon
-    plan: free
+    plan:   free
     rootDir: apps/server
     buildCommand: pnpm install --frozen-lockfile && pnpm --filter @wudapp/server build && pnpm --filter @wudapp/server migrate
     startCommand: pnpm --filter @wudapp/server start
